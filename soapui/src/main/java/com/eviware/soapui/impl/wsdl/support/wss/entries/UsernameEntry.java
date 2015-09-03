@@ -43,6 +43,9 @@ public class UsernameEntry extends WssEntryBase {
 
     private static final String PASSWORD_TEXT = "PasswordText";
 
+    private static final String NO_PASSWORD = "NoPassword";
+
+
     public static final String TYPE = "Username";
 
     private boolean addCreated;
@@ -69,18 +72,24 @@ public class UsernameEntry extends WssEntryBase {
             } else if (passwordType.equals(PASSWORD_DIGEST) || passwordType.equals(PASSWORD_DIGEST_EXT)) {
                 token.setPasswordType(WSConstants.PASSWORD_DIGEST);
             }
+            else if (passwordType.equals(NO_PASSWORD)){
+                token.setPasswordType(null);
+            }
         }
 
-        String password = context.expand(getPassword());
+        String password = null;
+        if (!passwordType.equals(NO_PASSWORD)) {
+            password = context.expand(getPassword());
 
-        if (PASSWORD_DIGEST_EXT.equals(passwordType)) {
-            try {
-                MessageDigest sha = MessageDigest.getInstance("SHA-1");
-                sha.reset();
-                sha.update(password.getBytes("UTF-8"));
-                password = Base64.encode(sha.digest());
-            } catch (Exception e) {
-                SoapUI.logError(e);
+            if (PASSWORD_DIGEST_EXT.equals(passwordType)) {
+                try {
+                    MessageDigest sha = MessageDigest.getInstance("SHA-1");
+                    sha.reset();
+                    sha.update(password.getBytes("UTF-8"));
+                    password = Base64.encode(sha.digest());
+                } catch (Exception e) {
+                    SoapUI.logError(e);
+                }
             }
         }
 
@@ -100,7 +109,7 @@ public class UsernameEntry extends WssEntryBase {
         form.appendCheckBox("addCreated", "Add Created", "Adds a created");
 
         form.appendComboBox("passwordType", "Password Type", new String[]{PASSWORD_TEXT, PASSWORD_DIGEST,
-                PASSWORD_DIGEST_EXT}, "The password type to generate");
+                PASSWORD_DIGEST_EXT, NO_PASSWORD}, "The password type to generate");
 
         return form.getPanel();
     }
